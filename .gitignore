@@ -1,2 +1,4 @@
 credenciais.py
 venv/
+__pycache__
+procedimento.ipynb
