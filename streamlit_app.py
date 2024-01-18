@@ -29,17 +29,12 @@ if login_credencial is not None and senha_credencial is not None:
             with st.status("Fazendo downloand dos arquivos..."):
                 navegador = configuracao(caminho, num_processo)
                 st.write("Configuração concluída")
-                navegador = login(navegador)
+                navegador = login(navegador, login_credencial, senha_credencial)
                 st.write("Login concluído.")
                 downloads(navegador, num_processo)
                 st.write("Download concluído.")
 
-            #num_processo = 16075488
-            #caminho = r"C:\Users\Vitor\Documents\Repositórios\automação\ressarcimento\dados"
-
-
-                
 
 
             st.button('Rerun')
-            #st.write(repr(caminho))
+

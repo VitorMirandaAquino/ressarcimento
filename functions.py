@@ -1,7 +1,7 @@
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
-from credenciais import login_allianz, senha_allianz
+#from credenciais import login_allianz, senha_allianz
 import time
 
 
@@ -22,7 +22,7 @@ def configuracao(caminho, num_processo):
     return navegador
 
 
-def login(navegador):
+def login(navegador, login_allianz, senha_allianz):
 
     navegador.get(url="https://ressarcimentofianca.libertyseguros.com.br/login")
 
@@ -62,12 +62,12 @@ def downloads(navegador, num_processo):
 
     time.sleep(2)
     # Close the new window
-    #navegador.close()
+    navegador.close()
 
     time.sleep(1)
     # Switch back to the original window
-    #navegador.switch_to.window(navegador.window_handles[0])
+    navegador.switch_to.window(navegador.window_handles[0])
 
     # Close the original window
-    #navegador.quit()
+    navegador.quit()
 
