@@ -1,7 +1,6 @@
 import streamlit as st
 from functions import configuracao, login, downloads
-
-
+import pandas as pd
 
 st.set_page_config(
         page_title="Download de documentos",
@@ -21,20 +20,35 @@ if login_credencial is not None and senha_credencial is not None:
     if caminho is not None:
         st.write(caminho)
         st.subheader("Processo")
-        num_processo = st.text_input(label="Digite o número do processo:", value=None)
-        st.write(num_processo)
+        excel_file = st.file_uploader('Insira um arquivo com o número dos processos', type='xlsx')
 
-        if num_processo is not None:
-            num_processo = int(num_processo)
-            with st.status("Fazendo downloand dos arquivos..."):
-                navegador = configuracao(caminho, num_processo)
-                st.write("Configuração concluída")
-                navegador = login(navegador, login_credencial, senha_credencial)
-                st.write("Login concluído.")
-                downloads(navegador, num_processo)
-                st.write("Download concluído.")
+        if excel_file is not None:
+            df_processo = pd.read_excel(excel_file)
+            df_processo_show = df_processo.copy()
+            df_processo_show['Processo'] = df_processo_show['Processo'].astype('str')
+            #st.table(df_processo_show)
 
+            st.subheader("Procedimento")
+            with st.status("Fazendo download dos arquivos ..."):
+                lista_docs_baixados = []
+                lista_docs_problema = []
+                for processo in df_processo.Processo:
+                #for processo in [16247971, 16339902]:
+                    st.write(f'**Iniciando procedimento para o processo: {processo}**')
+                    navegador = configuracao(caminho, processo)
+                    st.write("Configuração concluída")
+                    navegador = login(navegador, login_credencial, senha_credencial)
+                    st.write("Login concluído.")
+                    documentos_baixados, flag_problema = downloads(navegador, processo)
+                    if flag_problema  == True:
+                        lista_docs_problema.append(processo)
+                    lista_docs_baixados.append(documentos_baixados)
+                    st.write("Download concluído.")
+            st.subheader("Geral")
+            df_processo_show['Documentos Baixados'] = lista_docs_baixados
+            st.table(df_processo_show)
 
+            for doc in lista_docs_problema:
+                st.warning(f'Problema no download no processo {str(doc)}', icon="⚠️")
 
             st.button('Rerun')
-

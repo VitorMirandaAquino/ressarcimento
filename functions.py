@@ -3,7 +3,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 #from credenciais import login_allianz, senha_allianz
 import time
-
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import UnexpectedAlertPresentException
+import streamlit as st
 
 def configuracao(caminho, num_processo):
     servico = Service(ChromeDriverManager().install())
@@ -23,51 +27,95 @@ def configuracao(caminho, num_processo):
 
 
 def login(navegador, login_allianz, senha_allianz):
-
+    # Indo para o site da liberty
     navegador.get(url="https://ressarcimentofianca.libertyseguros.com.br/login")
 
-    time.sleep(1.5)
+    time.sleep(3)
+    # Inserindo login
     navegador.find_element('xpath', '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[1]/input').send_keys(login_allianz)
+    # Inserindo senha
     navegador.find_element('xpath', '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[2]/input').send_keys(senha_allianz)
 
-    time.sleep(1)
+    time.sleep(3)
+    # Logando no conta
     navegador.find_element('xpath', '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[3]/input').click()
 
     return navegador
 
+
+
+
+
 def downloads(navegador, num_processo):
-    time.sleep(2)
-    navegador.find_element('xpath', '//*[@id="pesquisa"]').send_keys(num_processo)
+    # Adicionando o número do processo
+    search_box = WebDriverWait(navegador, 10).until(
+        EC.presence_of_element_located((By.XPATH, '//*[@id="pesquisa"]'))
+    )
+    search_box.send_keys(num_processo)
 
-    time.sleep(0.5)
-    navegador.find_element('xpath', '/html/body/app-root/app-pesquisa/div[2]/div[3]/div[2]/button[1]').click()
+    # Pesquisando o processo
+    search_button = WebDriverWait(navegador, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-pesquisa/div[2]/div[3]/div[2]/button[1]'))
+    )
+    search_button.click()
 
-    time.sleep(3)
-    navegador.find_element('xpath', '/html/body/app-root/app-ressarcimento/app-footer/footer/button[6]').click()
+    # Indo para o site com os arquivos
+    files_button = WebDriverWait(navegador, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-ressarcimento/app-footer/footer/button[6]'))
+    )
+    files_button.click()
 
-    time.sleep(10)
-    # Switch to the new window
-    new_window_handle = navegador.window_handles[1]  # Assumes the new window is the second in the list
+    # Mudando para aba com os documentos
+    WebDriverWait(navegador, 10).until(
+        EC.number_of_windows_to_be(2)
+    )
+    new_window_handle = navegador.window_handles[1]
     navegador.switch_to.window(new_window_handle)
 
+    time.sleep(5)
+    # Descendo para o final da página
+    #navegador.execute_script("window.scrollTo(0, 10);")
+    time.sleep(5)
+
+
+    documentos_baixados = 0
+    
+    flag_problema = False
+    for i in range(2, 20):
+        time.sleep(3)
+
+        try:
+            navegador.execute_script("window.scrollTo(0, 5);")
+        except UnexpectedAlertPresentException as e:
+            #st.write(e)
+            flag_problema = True
+            break
+            # Handle the alert here, for example, by accepting it
+            #alert = navegador.switch_to.alert
+            #alert.accept()
+
+        element_xpath = f'//*[@id="documento-necessario"]/div[{i}]/div[2]/div/div'
+        
+        try:
+            # Wait for the element to be clickable
+            element = WebDriverWait(navegador, 10).until(
+                EC.element_to_be_clickable((By.XPATH, element_xpath))
+            )
+
+            # Scroll into view (just in case)
+            navegador.execute_script("arguments[0].scrollIntoView(true);", element)
+
+            # Click the element
+            element.click()
+            documentos_baixados += 1
+            #st.write(i)
+        except Exception as e:
+            #st.write(e)
+            break
+
     time.sleep(2)
-    navegador.execute_script("window.scrollTo(0, 1000);")
-    navegador.find_element('xpath', '/html/body/form/div[3]/div/div[1]/div[3]/div[1]/div[5]/div/div[2]/div[2]/div/div').click()
-
-    time.sleep(3)
-    navegador.find_element('xpath', '/html/body/form/div[3]/div/div[1]/div[3]/div[1]/div[5]/div/div[3]/div[2]/div/div').click()
-
-    time.sleep(3)
-    navegador.find_element('xpath', '/html/body/form/div[3]/div/div[1]/div[3]/div[1]/div[5]/div/div[4]/div[2]/div/div').click()
-
-    time.sleep(2)
-    # Close the new window
-    navegador.close()
-
-    time.sleep(1)
-    # Switch back to the original window
-    navegador.switch_to.window(navegador.window_handles[0])
-
     # Close the original window
     navegador.quit()
+
+    return documentos_baixados, flag_problema
 
