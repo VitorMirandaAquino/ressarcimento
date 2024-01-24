@@ -1,5 +1,5 @@
 import streamlit as st
-from functions import configuracao, login, downloads
+from functions import configuracao, login, downloads, localizando_processo
 import pandas as pd
 
 st.set_page_config(
@@ -26,7 +26,6 @@ if login_credencial is not None and senha_credencial is not None:
             df_processo = pd.read_excel(excel_file)
             df_processo_show = df_processo.copy()
             df_processo_show['Processo'] = df_processo_show['Processo'].astype('str')
-            #st.table(df_processo_show)
 
             st.subheader("Procedimento")
             with st.status("Fazendo download dos arquivos ..."):
@@ -39,7 +38,8 @@ if login_credencial is not None and senha_credencial is not None:
                     st.write("Configuração concluída")
                     navegador = login(navegador, login_credencial, senha_credencial)
                     st.write("Login concluído.")
-                    documentos_baixados, flag_problema = downloads(navegador, processo)
+                    navegador = localizando_processo(navegador, processo)
+                    documentos_baixados, flag_problema = downloads(navegador)
                     if flag_problema  == True:
                         lista_docs_problema.append(processo)
                     lista_docs_baixados.append(documentos_baixados)

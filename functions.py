@@ -42,11 +42,7 @@ def login(navegador, login_allianz, senha_allianz):
 
     return navegador
 
-
-
-
-
-def downloads(navegador, num_processo):
+def localizando_processo(navegador, num_processo):
     # Adicionando o número do processo
     search_box = WebDriverWait(navegador, 10).until(
         EC.presence_of_element_located((By.XPATH, '//*[@id="pesquisa"]'))
@@ -72,17 +68,22 @@ def downloads(navegador, num_processo):
     new_window_handle = navegador.window_handles[1]
     navegador.switch_to.window(new_window_handle)
 
-    time.sleep(5)
-    # Descendo para o final da página
-    #navegador.execute_script("window.scrollTo(0, 10);")
-    time.sleep(5)
+    time.sleep(10)
 
+    return navegador
+
+
+
+
+
+def downloads(navegador):
 
     documentos_baixados = 0
     
     flag_problema = False
     for i in range(2, 20):
         time.sleep(3)
+        element_xpath = f'//*[@id="documento-necessario"]/div[{i}]/div[2]/div/div'
 
         try:
             navegador.execute_script("window.scrollTo(0, 5);")
@@ -90,21 +91,12 @@ def downloads(navegador, num_processo):
             #st.write(e)
             flag_problema = True
             break
-            # Handle the alert here, for example, by accepting it
-            #alert = navegador.switch_to.alert
-            #alert.accept()
-
-        element_xpath = f'//*[@id="documento-necessario"]/div[{i}]/div[2]/div/div'
-        
         try:
             # Wait for the element to be clickable
             element = WebDriverWait(navegador, 10).until(
-                EC.element_to_be_clickable((By.XPATH, element_xpath))
-            )
-
+                EC.element_to_be_clickable((By.XPATH, element_xpath)))
             # Scroll into view (just in case)
             navegador.execute_script("arguments[0].scrollIntoView(true);", element)
-
             # Click the element
             element.click()
             documentos_baixados += 1
