@@ -35,7 +35,13 @@ def configurar_navegador_para_download(caminho, num_processo):
     download_directory = caminho + f"\\{str(num_processo)}"
 
     # Define as preferências de download para o navegador
-    prefs = {"download.default_directory": download_directory}
+    prefs = {
+        "download.default_directory": download_directory,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True,
+        "profile.default_content_settings.images": 1
+    }
     chrome_options.add_experimental_option("prefs", prefs)
 
     # Inicializa o navegador Chrome com as opções configuradas
