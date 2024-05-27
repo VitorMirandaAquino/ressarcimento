@@ -171,3 +171,110 @@ def tentar_processar_linha(navegador, row, path_generico_multiplo, path_generico
             if i == tentativas - 1:
                 print("Todas as tentativas falharam.")
     return navegador
+
+
+def download_automatico_processo_danos_eletricos(navegador):
+
+    time.sleep(7)
+    # Ir para página de envio dos documentos
+    orcamento_botao = WebDriverWait(navegador, 15).until(
+        EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/app-ressarcimento/app-footer/footer/button[6]'))
+    )
+    orcamento_botao.click()
+
+    # Alterar o navegador para a aba de download de documentos
+    WebDriverWait(navegador, 10).until(
+        EC.number_of_windows_to_be(2))
+    new_window_handle = navegador.window_handles[1]
+    navegador.switch_to.window(new_window_handle)
+
+    # Download de Formulário Cadastrais
+    try:
+        time.sleep(7)
+        form_cadastral = WebDriverWait(navegador, 15).until(
+            EC.element_to_be_clickable((By.XPATH, '/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[1]/div/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div/div/app-documento-ocorrencia-item/div/div[2]/a'))
+        )
+        form_cadastral.click()
+    except:
+        pass
+
+    time.sleep(10)
+    xpath_docs_adicionais = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[1]"
+
+    try:
+        # Localizar o elemento pelo XPath
+        element = navegador.find_element(By.XPATH, xpath_docs_adicionais)
+        
+    except Exception as e:
+        print("Elemento não encontrado. Erro:", e)
+
+
+    # Lista de documentos
+    lista_documentos = ['Conta de Energia Elétrica em Nome do Segurado',
+                        'Documento Pessoal do Segurado com CPF e RG',
+                        'Foto da etiqueta com modelo e número de serie do equipamento danificado',
+                        'Foto do número do registro do medidor de energia',
+                        'Foto Frontal do Equipamento Danificado',
+                        'Laudo Técnico',
+                        'Nota Fiscal',
+                        'Orçamento de Reparação/Reposição', 
+                        'Solicitação de Documentos',
+                        'Áudio de Regulação',
+                        'Carta do segurado com descrição do evento',
+                        'Carta do Terceiro com Descrição do Evento',
+                        'Comprovante de Endereço em Nome do Terceiro',
+                        'Comprovante Valor Aluguel',
+                        'Documento de comprovação de propriedade do imóvel',
+                        'Documento Pessoal do Terceiro com CPF e RG',
+                        'E-mail - PROPERTY',
+                        'E-mail Recebido - PROPERTY',
+                        'Fotos do item danificado',
+                        'Fotos do local do item',
+                        'Fotos dos danos reclamados',
+                        'Noticiário na Mídia',
+                        'Relação dos bens subtraídos',
+                        'RES - Comprovante de Despesa - PROPERTY',
+                        'RES - Comprovante de Pagamento - PROPERTY',
+                        'RES - Contestação',
+                        'RES - Documentos Judiciais - PROPERTY',
+                        'RES - Execução',
+                        'RES - Nota Fiscal Pagamento Honório - PROPERTY',
+                        'RES - Outros - PROPERTY',
+                        'RES - Parecer Prestador',
+                        'RES - Pesquisa Financeira',
+                        'RES - Petição Inicial',
+                        'RES - PROPERTY',
+                        'RES - Recurso de Apelação',
+                        'RES - Recurso Outros',
+                        'RES - Sentença Desfavorável a Cia',
+                        'RES - Sentença Favorável a Cia',
+                        'RES - Termo de Transação - PROPERTY',
+                        'Termo de Quitação Assinado pelo Terceiro']
+
+    texto = element.text
+
+
+    info_documentos = processar_texto(texto, lista_documentos)
+
+    df_download = pd.DataFrame(info_documentos).T
+    df_download = df_download.dropna()
+    df_download = df_download.sort_values(by='partes')
+    #df_download
+
+    path_generico_individual = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[1]/div[2]/div[{}]/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div/div/app-documento-ocorrencia-item/div/div[2]/a"
+    path_generico_multiplo = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[1]/div[2]/div[{}]/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div[{}]/div/app-documento-ocorrencia-item/div/div[2]/a"
+
+    posicoes_pagina = [300, 500, 700]
+
+    # Seu loop para iterar sobre as linhas do DataFrame
+    for i, row in df_download.iterrows():
+
+        # Download de documento
+        time.sleep(5)
+
+        # Realizando downloads
+        navegador = tentar_processar_linha(navegador, row, path_generico_multiplo, path_generico_individual, caminho, num_processo, posicoes_pagina)
+        #navegador = processar_linha(navegador, row, path_generico_multiplo, path_generico_individual, caminho, num_processo, posicoes_pagina[1])
+            
+    
+    navegador.quit()
