@@ -17,6 +17,7 @@ import streamlit as st
 import requests
 import os
 
+from functions import configurar_navegador_para_download, realizar_login_liberty, localizar_processo
 
 def download_imagem_dentro_loop(navegador, xpath, caminho, nome_arquivo):
     
@@ -173,7 +174,7 @@ def tentar_processar_linha(navegador, row, path_generico_multiplo, path_generico
     return navegador
 
 
-def download_automatico_processo_danos_eletricos(navegador):
+def download_automatico_processo_danos_eletricos(navegador, caminho, num_processo):
 
     time.sleep(7)
     # Ir para página de envio dos documentos
@@ -272,9 +273,41 @@ def download_automatico_processo_danos_eletricos(navegador):
         # Download de documento
         time.sleep(5)
 
+        print(row)
         # Realizando downloads
         navegador = tentar_processar_linha(navegador, row, path_generico_multiplo, path_generico_individual, caminho, num_processo, posicoes_pagina)
         #navegador = processar_linha(navegador, row, path_generico_multiplo, path_generico_individual, caminho, num_processo, posicoes_pagina[1])
             
     
     navegador.quit()
+
+
+def pipeline_danos_eletricos(caminho, login, senha):
+
+    st.subheader("Processo")
+    excel_file = st.file_uploader('Insira um arquivo com o número dos processos', type='xlsx')
+
+    if excel_file is not None:
+        df_processo = pd.read_excel(excel_file)
+        df_processo_show = df_processo.copy()
+        df_processo_show['Processo'] = df_processo_show['Processo'].astype('str')
+
+
+        st.subheader("Procedimento")
+        with st.status("Fazendo download dos arquivos ..."):
+            for processo in df_processo.Processo:
+
+                st.write(f'**Iniciando procedimento para o processo: {processo}**')
+                navegador = configurar_navegador_para_download(caminho, processo)
+
+                st.write("Configuração concluída")
+                navegador = realizar_login_liberty(navegador, login, senha)
+
+                st.write("Login concluído.")
+                navegador = localizar_processo(navegador, processo)
+
+                download_automatico_processo_danos_eletricos(navegador, caminho, processo)
+
+                st.write("Download dos documentos concluído.")
+
+
