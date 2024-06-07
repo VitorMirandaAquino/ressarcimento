@@ -4,6 +4,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import UnexpectedAlertPresentException
+import time
 
 class LibertyAutomation:
     def __init__(self, caminho, num_processo):
@@ -31,6 +33,7 @@ class LibertyAutomation:
         self.navegador.maximize_window()
         self.enviar_valor_para_campo(By.XPATH, '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[1]/input', login)
         self.enviar_valor_para_campo(By.XPATH, '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[2]/input', senha)
+        time.sleep(2)
         self.clicar_botao(By.XPATH, '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[3]/input')
 
     def localizar_processo(self):
@@ -38,15 +41,29 @@ class LibertyAutomation:
         self.clicar_botao(By.XPATH, '/html/body/app-root/app-pesquisa/div[2]/div[3]/div[2]/button[1]')
 
     def clicar_botao(self, by, valor):
-        botao = WebDriverWait(self.navegador, 10).until(
+        botao = WebDriverWait(self.navegador, 20).until(
             EC.element_to_be_clickable((by, valor))
         )
+
+        botao.click()
+
+    def clicar_botao_download(self, by, valor):
+        botao = WebDriverWait(self.navegador, 20).until(
+            EC.element_to_be_clickable((by, valor))
+        )
+        try:
+            self.executar_script("arguments[0].scrollIntoView(true);", botao)
+        except UnexpectedAlertPresentException:
+            botao.click()
+            pass
+
         botao.click()
 
     def enviar_valor_para_campo(self, by, valor, texto):
         campo = WebDriverWait(self.navegador, 10).until(
             EC.presence_of_element_located((by, valor))
         )
+
         campo.send_keys(texto)
 
     def mudar_para_aba(self, numero_aba):

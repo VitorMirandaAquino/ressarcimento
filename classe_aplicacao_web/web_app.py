@@ -4,7 +4,7 @@ import streamlit as st
 from functions_danos_eletricos import pipeline_danos_eletricos
 import pandas as pd
 from classe_navegador import LibertyAutomation
-from classe_auto.procedimentos import Procedimentos
+from classe_auto.procedimentos import Procedimentos as Procedimentos_auto
 
 class WebApp:
     def __init__(self):
@@ -68,7 +68,7 @@ class WebApp:
                     st.write("Login concluído.")
                     navegador.localizar_processo()
                     
-                    procedimentos = Procedimentos(navegador)  # Instanciando a classe Procedimentos
+                    procedimentos = Procedimentos_auto(navegador)  # Instanciando a classe Procedimentos
 
                     if opcao_orcamento == "Sim":
                         try:
@@ -82,7 +82,7 @@ class WebApp:
                             #navegador = procedimentos.configurar_navegador_para_download(self.caminho, processo)
                             navegador.realizar_login_liberty(self.login_credencial, self.senha_credencial)
                             navegador.localizar_processo()
-                            procedimentos = Procedimentos(navegador)
+                            procedimentos = Procedimentos_auto(navegador)
 
                     documentos_baixados, flag_problema = procedimentos.downloads()
                     if flag_problema:

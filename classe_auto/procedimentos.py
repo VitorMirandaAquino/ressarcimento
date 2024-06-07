@@ -2,8 +2,8 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from classe_navegador.navegador import LibertyAutomation
 from selenium.common.exceptions import UnexpectedAlertPresentException
+from classe_navegador.navegador import LibertyAutomation
 
 class Procedimentos:
     def __init__(self, liberty_automation: LibertyAutomation):
