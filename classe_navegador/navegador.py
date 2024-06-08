@@ -2,10 +2,14 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import UnexpectedAlertPresentException
+from selenium.common.exceptions import UnexpectedAlertPresentException, ElementClickInterceptedException
 import time
+
+
+
 
 class LibertyAutomation:
     def __init__(self, caminho, num_processo):
@@ -33,7 +37,6 @@ class LibertyAutomation:
         self.navegador.maximize_window()
         self.enviar_valor_para_campo(By.XPATH, '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[1]/input', login)
         self.enviar_valor_para_campo(By.XPATH, '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[2]/input', senha)
-        time.sleep(2)
         self.clicar_botao(By.XPATH, '/html/body/app-root/app-login-prestador/div[2]/div/div/div[2]/div[2]/div/div[3]/input')
 
     def localizar_processo(self):
@@ -51,13 +54,20 @@ class LibertyAutomation:
         botao = WebDriverWait(self.navegador, 20).until(
             EC.element_to_be_clickable((by, valor))
         )
-        try:
-            self.executar_script("arguments[0].scrollIntoView(true);", botao)
-        except UnexpectedAlertPresentException:
-            botao.click()
-            pass
 
-        botao.click()
+        self.executar_script("arguments[0].scrollIntoView(true);", botao)
+        
+        try:
+            botao.click()
+        except ElementClickInterceptedException:
+            time.sleep(1)
+            self.executar_script("arguments[0].scrollIntoView(true);", botao)
+            botao.click()
+        
+    def rolar_pagina(self):
+
+        body = self.navegador.find_element(By.TAG_NAME, 'body')  
+        body.send_keys(Keys.PAGE_DOWN)  # Scroll down
 
     def enviar_valor_para_campo(self, by, valor, texto):
         campo = WebDriverWait(self.navegador, 10).until(

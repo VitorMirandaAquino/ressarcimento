@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import UnexpectedAlertPresentException
+from selenium.common.exceptions import UnexpectedAlertPresentException, TimeoutException
 
 import time
 
@@ -145,15 +145,29 @@ class Procedimentos:
         
         time.sleep(3)
 
-        # Clicar no botão para fazer o download
-        self.liberty_automation.clicar_botao_download(By.XPATH, xpath)
+        for _ in range(0,3):
 
-        # Alterar o navegador para a aba de download de documentos
-        WebDriverWait(self.liberty_automation, 15).until(
-            EC.number_of_windows_to_be(3))
+            try:
+                self.liberty_automation.clicar_botao(By.XPATH, xpath)
+                break
+            except:
+                self.liberty_automation.rolar_pagina()
+                pass
+    
+
+        try:        
+            # Alterar o navegador para a aba de download de documentos
+            WebDriverWait(self.liberty_automation.navegador, 20).until(
+                EC.number_of_windows_to_be(3))
+        except TimeoutException as e: 
+            print(f'Erro: {e}')
+            time.sleep(5)
+
+        
+        time.sleep(5)
 
         # Obtenha uma lista de identificadores de janelas
-        janelas_abertas = self.liberty_automation.window_handles
+        janelas_abertas = self.liberty_automation.navegador.window_handles
 
         # Determine o número de janelas abertas
         numero_janelas = len(janelas_abertas)
@@ -163,14 +177,14 @@ class Procedimentos:
             self.liberty_automation.mudar_para_aba(2)
 
             # Obtenha a URL da imagem
-            url_imagem = self.liberty_automation.current_url
+            url_imagem = self.liberty_automation.navegador.current_url
 
             time.sleep(5)
 
-            self.liberty_automation.close()
+            self.liberty_automation.navegador.close()
 
             # Volte para a janela anterior
-            self.liberty_automation.switch_to.window(self.liberty_automation.window_handles[1])
+            self.liberty_automation.navegador.switch_to.window(self.liberty_automation.navegador.window_handles[1])
 
             # Baixe a imagem usando requests
             response = requests.get(url_imagem)
@@ -183,10 +197,11 @@ class Procedimentos:
                     os.makedirs(self.liberty_automation.caminho)
                 
                 # Salve a imagem localmente no diretório especificado
-                with open(os.path.join(self.liberty_automation.caminho, f"{nome_arquivo}.jpg"), "wb") as file:
+                with open(os.path.join(f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}", f"{nome_arquivo}.jpg"), "wb") as file:
                     file.write(response.content)
             else:
                 print("Não foi possível baixar a imagem.")
+    
 
 
     def processar_linha(self, row):
@@ -195,19 +210,21 @@ class Procedimentos:
         nome_documento = row.name
         nome_documento = nome_documento.replace("/", "")
 
+
         # Verifica se há mais de um arquivo a ser processado
         if row['arquivos'] > 1:
             for i in range(1, int(row['arquivos']) + 1):
                 time.sleep(5)
-                self.download_image_inside_loop(
+                self.download_imagem_dentro_loop(
                     self.xpath_generico_multiplo.format(partes_int, i),
-                    f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}",
+#                    f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}",
                     f"{nome_documento}_{i}"
                 )
         else:
-            self.download_image_inside_loop(
+            self.download_imagem_dentro_loop(
                 self.xpath_generico_individual.format(partes_int),
-                f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}",
+#                f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}",
                 nome_documento
             )
+        
 
