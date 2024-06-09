@@ -6,11 +6,13 @@ import os
 import shutil
 import zipfile
 
+
+
 class WebApp:
     def __init__(self):
         self.login_credencial = None
         self.senha_credencial = None
-        self.caminho = r"C:\Users\Vitor\Documents\Repositórios\automação\ressarcimento\dados"
+        self.caminho = r"C:\Users\Vitor\Documents\Repositórios\automação\ressarcimento\dados_copy"
         self.tipo_processo = None
 
     def run(self):
@@ -51,7 +53,6 @@ class WebApp:
                     zipf.write(os.path.join(root, file),
                                os.path.relpath(os.path.join(root, file),
                                os.path.join(folder_path, '..')))
-
     def delete_files_and_folders_in_directory(self, directory_path):
         # Remove todos os arquivos e subpastas na pasta
         for root, dirs, files in os.walk(directory_path):
@@ -59,7 +60,6 @@ class WebApp:
                 os.remove(os.path.join(root, file))
             for dir in dirs:
                 shutil.rmtree(os.path.join(root, dir))
-
 
     def processos_auto_pipeline(self):
         st.subheader("Orçamento")
@@ -74,6 +74,7 @@ class WebApp:
             df_processo_show['Processo'] = df_processo_show['Processo'].astype('str')
 
             st.subheader("Procedimento")
+
             botao_iniciar = st.button("Iniciar Procedimento")
 
             self.delete_files_and_folders_in_directory("dados")
@@ -102,6 +103,7 @@ class WebApp:
                                 lista_docs_problema.append(processo)
                                 st.write("Problema no download do orçamento.")
                                 navegador = LibertyAutomation(self.caminho, processo)  # Reinstancia o navegador
+
                                 navegador.realizar_login_liberty(self.login_credencial, self.senha_credencial)
                                 navegador.localizar_processo()
                                 procedimentos = Procedimentos_auto(navegador)
@@ -132,3 +134,18 @@ class WebApp:
                             file_name='output.zip',
                             mime='application/zip'
                         )
+
+
+                # Botão para download do arquivo ZIP
+                self.create_zip('dados_copy', r'dados_copy\output.zip')
+                with open(r'dados_copy\output.zip', 'rb') as f:
+                    bytes_data = f.read()
+                
+                st.download_button(
+                    label='Download ZIP',
+                    data=bytes_data,
+                    file_name='output.zip',
+                    mime='application/zip')
+                
+
+                
