@@ -2,9 +2,11 @@ import streamlit as st
 import pandas as pd
 from classe_navegador import LibertyAutomation
 from classe_auto.procedimentos import Procedimentos as Procedimentos_auto
-import zipfile
 import os
 import shutil
+import zipfile
+
+
 
 class WebApp:
     def __init__(self):
@@ -44,7 +46,6 @@ class WebApp:
         st.subheader("Tipo de Processo")
         self.tipo_processo = st.selectbox("Você deseja baixar as informações de qual tipo de Processo?", ("AUTO", "DANOS ELÉTRICOS"))
 
-
     def create_zip(self, folder_path, output_filename):
         with zipfile.ZipFile(output_filename, 'w') as zipf:
             for root, dirs, files in os.walk(folder_path):
@@ -52,7 +53,6 @@ class WebApp:
                     zipf.write(os.path.join(root, file),
                                os.path.relpath(os.path.join(root, file),
                                os.path.join(folder_path, '..')))
-                    
     def delete_files_and_folders_in_directory(self, directory_path):
         # Remove todos os arquivos e subpastas na pasta
         for root, dirs, files in os.walk(directory_path):
@@ -74,10 +74,12 @@ class WebApp:
             df_processo_show['Processo'] = df_processo_show['Processo'].astype('str')
 
             st.subheader("Procedimento")
-            botao_iniciar = st.button('Iniciar Procedimento')
+
+            botao_iniciar = st.button("Iniciar Procedimento")
+
+            self.delete_files_and_folders_in_directory("dados")
 
             if botao_iniciar:
-                self.delete_files_and_folders_in_directory('dados_copy')
                 lista_docs_baixados = []
                 lista_docs_problema = []
                 with st.status("Fazendo download dos arquivos ..."):
@@ -101,7 +103,7 @@ class WebApp:
                                 lista_docs_problema.append(processo)
                                 st.write("Problema no download do orçamento.")
                                 navegador = LibertyAutomation(self.caminho, processo)  # Reinstancia o navegador
-                                #navegador = procedimentos.configurar_navegador_para_download(self.caminho, processo)
+
                                 navegador.realizar_login_liberty(self.login_credencial, self.senha_credencial)
                                 navegador.localizar_processo()
                                 procedimentos = Procedimentos_auto(navegador)
@@ -119,6 +121,20 @@ class WebApp:
                 for doc in lista_docs_problema:
                     st.warning(f'Problema no download no processo {str(doc)}', icon="⚠️")
 
+                zip_path = r"dados\output.zip"
+                self.create_zip(self.caminho, zip_path)
+                with open(zip_path, 'rb') as f:
+                    bytes_data = f.read()
+
+
+                # Botão para download do arquivo ZIP
+                st.download_button(
+                            label='Download ZIP',
+                            data=bytes_data,
+                            file_name='output.zip',
+                            mime='application/zip'
+                        )
+
 
                 # Botão para download do arquivo ZIP
                 self.create_zip('dados_copy', r'dados_copy\output.zip')
@@ -133,4 +149,3 @@ class WebApp:
                 
 
                 
-
