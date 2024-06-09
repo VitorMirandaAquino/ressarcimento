@@ -136,16 +136,5 @@ class WebApp:
                         )
 
 
-                # Botão para download do arquivo ZIP
-                self.create_zip('dados_copy', r'dados_copy\output.zip')
-                with open(r'dados_copy\output.zip', 'rb') as f:
-                    bytes_data = f.read()
-                
-                st.download_button(
-                    label='Download ZIP',
-                    data=bytes_data,
-                    file_name='output.zip',
-                    mime='application/zip')
-                
 
                 
