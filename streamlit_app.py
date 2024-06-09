@@ -1,6 +1,5 @@
 from classe_aplicacao_web.web_app import WebApp
-import streamlit as st
-import os
+
 
 if __name__ == "__main__":
 

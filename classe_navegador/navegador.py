@@ -1,13 +1,15 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import UnexpectedAlertPresentException, ElementClickInterceptedException
 import time
-
+import os
 
 
 
@@ -18,7 +20,7 @@ class LibertyAutomation:
         self.navegador = self.configurar_navegador_para_download()
 
     def configurar_navegador_para_download(self):
-        servico = Service(ChromeDriverManager().install())
+        servico = Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
