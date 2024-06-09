@@ -24,7 +24,7 @@ class WebApp:
         st.title("Download de documentos :page_facing_up:")
         st.header("Configuração para download")
         self.get_credenciais()
-        self.select_caminho()
+        #self.select_caminho()
         self.select_tipo_processo()
 
         if self.login_credencial and self.senha_credencial and self.tipo_processo:
