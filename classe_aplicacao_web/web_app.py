@@ -12,7 +12,7 @@ class WebApp:
     def __init__(self):
         self.login_credencial = None
         self.senha_credencial = None
-        self.caminho = r"C:\Users\Vitor\Documents\Repositórios\automação\ressarcimento\dados_copy"
+        self.caminho = r"dados"
         self.tipo_processo = None
 
     def run(self):
