@@ -20,7 +20,15 @@ class LibertyAutomation:
     def configurar_navegador_para_download(self):
         servico = Service(ChromeDriverManager().install())
         chrome_options = webdriver.ChromeOptions()
-        download_directory = self.caminho + f"\\{str(self.num_processo)}"
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        
+        # Define o diretório de download
+        download_directory = os.path.join(self.caminho, str(self.num_processo))
+        if not os.path.exists(download_directory):
+            os.makedirs(download_directory)
+        
         prefs = {
             "download.default_directory": download_directory,
             "download.prompt_for_download": False,
@@ -29,6 +37,7 @@ class LibertyAutomation:
             "profile.default_content_settings.images": 1
         }
         chrome_options.add_experimental_option("prefs", prefs)
+        
         navegador = webdriver.Chrome(service=servico, options=chrome_options)
         return navegador
 
