@@ -56,16 +56,12 @@ class Procedimentos:
 
         documentos_baixados = 0
         flag_problema = False
+        tentativas = 0
         
         for i in range(2, 20):
             time.sleep(3)
             element_xpath = f'//*[@id="documento-necessario"]/div[{i}]/div[2]/div/div'
 
-            #try:
-            #    self.liberty_automation.executar_script("window.scrollTo(0, 5);")
-            #except UnexpectedAlertPresentException as e:
-            #    flag_problema = True
-            #    break
 
             try:
                 element = WebDriverWait(navegador, 10).until(
@@ -75,8 +71,9 @@ class Procedimentos:
                 element.click()
                 documentos_baixados += 1
             except Exception as e:
-                print(e)
-                break
+                tentativas = tentativas + 1
+                if tentativas > 2:
+                    break
 
         time.sleep(2)
         navegador.quit()
