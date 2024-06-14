@@ -46,6 +46,7 @@ class LibertyAutomation:
     def configurar_navegador_para_download_local(self):
         servico = Service(ChromeDriverManager().install())
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--headless")
         
         # Define o diretório de download
         download_directory = os.path.join(self.caminho, str(self.num_processo))
