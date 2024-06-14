@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from classe_navegador import LibertyAutomation
 from classe_auto.procedimentos import Procedimentos as Procedimentos_auto
+from classe_danos_eletricos.procedimentos import Procedimentos as Procedimentos_danos
 import os
 import shutil
 import zipfile
@@ -12,7 +13,7 @@ class WebApp:
     def __init__(self):
         self.login_credencial = None
         self.senha_credencial = None
-        self.caminho = r"dados"
+        self.caminho = r"C:\Users\Vitor\Documents\Repositórios\automação\ressarcimento\dados"
         self.tipo_processo = None
 
     def run(self):
@@ -31,8 +32,8 @@ class WebApp:
             if self.tipo_processo == "AUTO":
                 self.processos_auto_pipeline()
             elif self.tipo_processo == "DANOS ELÉTRICOS":
-                #pipeline_danos_eletricos(caminho=self.caminho, login=self.login_credencial, senha=self.senha_credencial)
-                pass
+                self.processos_danos_eletricos_pipeline()
+
 
     def get_credenciais(self):
         self.login_credencial = st.text_input("Digite o login do site:")
@@ -77,7 +78,7 @@ class WebApp:
 
             botao_iniciar = st.button("Iniciar Procedimento")
 
-            self.delete_files_and_folders_in_directory("dados")
+            #self.delete_files_and_folders_in_directory("dados")
 
             if botao_iniciar:
                 lista_docs_baixados = []
@@ -99,7 +100,7 @@ class WebApp:
                                 procedimentos.baixar_orcamento()
                                 st.write("Download do orçamento concluído.")
                             except:
-                                navegador.fechar_navegador()
+                                navegador.navegador.close()
                                 lista_docs_problema.append(processo)
                                 st.write("Problema no download do orçamento.")
                                 navegador = LibertyAutomation(self.caminho, processo)  # Reinstancia o navegador
@@ -121,20 +122,60 @@ class WebApp:
                 for doc in lista_docs_problema:
                     st.warning(f'Problema no download no processo {str(doc)}', icon="⚠️")
 
-                zip_path = r"dados\output.zip"
-                self.create_zip(self.caminho, zip_path)
-                with open(zip_path, 'rb') as f:
-                    bytes_data = f.read()
+                st.button("Reiniciar Procedimento")
+
+                #zip_path = r"dados\output.zip"
+                #self.create_zip(self.caminho, zip_path)
+                #with open(zip_path, 'rb') as f:
+                #    bytes_data = f.read()
 
 
                 # Botão para download do arquivo ZIP
-                st.download_button(
-                            label='Download ZIP',
-                            data=bytes_data,
-                            file_name='output.zip',
-                            mime='application/zip'
-                        )
+                #st.download_button(
+                #            label='Download ZIP',
+                #            data=bytes_data,
+                #            file_name='output.zip',
+                #            mime='application/zip'
+                #        )
+    def processos_danos_eletricos_pipeline(self):
+
+        st.subheader("Processo")
+        excel_file = st.file_uploader('Insira um arquivo com o número dos processos', type='xlsx')
+
+        if excel_file is not None:
+            df_processo = pd.read_excel(excel_file)
+            df_processo_show = df_processo.copy()
+            df_processo_show['Processo'] = df_processo_show['Processo'].astype('str')
+
+            st.subheader("Procedimento")
+
+            botao_iniciar = st.button("Iniciar Procedimento")
+
+            if botao_iniciar:
+                with st.status("Fazendo download dos arquivos ..."):
+                    for processo in df_processo.Processo:
+                        st.write(f'**Iniciando procedimento para o processo: {processo}**')
+                        navegador = LibertyAutomation(self.caminho, processo)  # Instanciando a classe LibertyAutomation
+                        st.write("Configuração concluída")
+                        navegador.realizar_login_liberty(self.login_credencial, self.senha_credencial)
+                        st.write("Login concluído.")
+                        navegador.localizar_processo()
+                        # Instanciando a classe Procedimentos
+                        procedimentos = Procedimentos_danos(navegador)
+                        procedimentos.ir_para_pagina_downloads()
+                        procedimentos.download_formularios_cadastrais()  
+                        df_download = procedimentos.processar_texto_documentos()
+                        # Download dos documentos iterativos
+                        posicao = 0
+                        for i, row in df_download.iterrows():
+                            posicao = procedimentos.processar_linha(row)
+
+                        procedimentos.processar_texto_fotos()
+                        navegador.navegador.close()
+                        st.write("Download dos documentos concluído.")
 
 
 
+
+                        
                 

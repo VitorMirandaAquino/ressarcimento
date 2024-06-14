@@ -62,7 +62,8 @@ lista_documentos = ['Conta de Energia Elétrica em Nome do Segurado',
 
 path_generico_individual = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[1]/div[2]/div[{}]/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div/div/app-documento-ocorrencia-item/div/div[2]/a"
 path_generico_multiplo = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[1]/div[2]/div[{}]/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div[{}]/div/app-documento-ocorrencia-item/div/div[2]/a"
-
+xpath_fotos_complementares_unico = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[2]/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div/div/app-documento-ocorrencia-item/div/div[2]/a"
+xpath_fotos_complementares_multiplos = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[2]/app-tipo-documento/div/div[2]/app-documentos-ocorrencia/div[{}]/div/app-documento-ocorrencia-item/div/div[2]/a"
 
 class Procedimentos:
     def __init__(self, liberty_automation: LibertyAutomation):
@@ -70,6 +71,8 @@ class Procedimentos:
         self.lista_documentos = lista_documentos
         self.xpath_generico_individual = path_generico_individual
         self.xpath_generico_multiplo = path_generico_multiplo
+        self.xpath_fotos_complementares_individual = xpath_fotos_complementares_unico
+        self.xpath_fotos_complementares_multiplos = xpath_fotos_complementares_multiplos
         
 
     def ir_para_pagina_downloads(self):
@@ -91,15 +94,19 @@ class Procedimentos:
 
     def localizar_elemento_documentos(self):
         xpath_docs_adicionais = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[1]"
-
         try:
+            # Espero o elemento ser vísivel
+            WebDriverWait(self.liberty_automation.navegador, 20).until(
+                        EC.element_to_be_clickable((By.XPATH, xpath_docs_adicionais))
+            )
             # Localizar o elemento pelo XPath
             element = self.liberty_automation.navegador.find_element(By.XPATH, xpath_docs_adicionais)
             return element.text
         except Exception as e:
-            print("Elemento não encontrado. Erro:", e)
+            #print(e)
+            pass
 
-    def processar_texto(self):
+    def processar_texto_documentos(self):
         """
         Processa o texto para encontrar o número de arquivos adicionados para cada documento na lista de documentos.
 
@@ -144,27 +151,26 @@ class Procedimentos:
     def download_imagem_dentro_loop(self, xpath, nome_arquivo):
         
         time.sleep(3)
-
         for _ in range(0,3):
 
             try:
+                time.sleep(0.2)
                 self.liberty_automation.clicar_botao(By.XPATH, xpath)
                 break
             except:
                 self.liberty_automation.rolar_pagina()
                 pass
     
-
         try:        
             # Alterar o navegador para a aba de download de documentos
             WebDriverWait(self.liberty_automation.navegador, 20).until(
                 EC.number_of_windows_to_be(3))
         except TimeoutException as e: 
-            print(f'Erro: {e}')
-            time.sleep(5)
+            #print(f'Erro: {e}')
+            time.sleep(8)
 
         
-        time.sleep(5)
+        time.sleep(2.5)
 
         # Obtenha uma lista de identificadores de janelas
         janelas_abertas = self.liberty_automation.navegador.window_handles
@@ -217,14 +223,76 @@ class Procedimentos:
                 time.sleep(5)
                 self.download_imagem_dentro_loop(
                     self.xpath_generico_multiplo.format(partes_int, i),
-#                    f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}",
                     f"{nome_documento}_{i}"
                 )
         else:
             self.download_imagem_dentro_loop(
                 self.xpath_generico_individual.format(partes_int),
-#                f"{self.liberty_automation.caminho}\\{self.liberty_automation.num_processo}",
                 nome_documento
             )
         
+    def localizar_elemento_fotos_complementares(self):
+        xpath_elemento_fotos_complementares = "/html/body/app-root/ng-component/main/article/section[3]/app-files-upload/div/div[2]/div[2]/div[2]/app-tipo-documento/div"
+
+
+        for _ in range(0,3):
+
+            try:
+                # Localizar o elemento pelo XPath
+                element = self.liberty_automation.navegador.find_element(By.XPATH, xpath_elemento_fotos_complementares)
+                return element.text
+            
+            except:
+                self.liberty_automation.rolar_pagina()
+                pass
+    
+        try:
+            # Localizar o elemento pelo XPath
+            element = self.liberty_automation.navegador.find_element(By.XPATH, xpath_elemento_fotos_complementares)
+            return element.text
+        except Exception as e:
+            #print("Elemento não encontrado. Erro:", e)
+            pass
+
+    def processar_texto_fotos(self):
+        """
+        Processa o texto para encontrar o número de arquivos adicionados para cada documento na lista de documentos.
+
+        Returns:
+        dict: Um dicionário com a contagem de arquivos e as partes do texto para cada documento.
+        """
+        texto = self.localizar_elemento_fotos_complementares()
+
+        # Quebrar o texto em partes após "arquivo adicionado"
+        texto_relevante = re.split(r'arquivo[s]? adicionado[s]?', texto)[0]
+
+        # Esperar um tempo (se necessário)
+        time.sleep(5)
+
+        # Incluir arquivos no texto
+        texto_relevante = texto_relevante + "arquivos"
+        
+        # Procurar pelo número de arquivos
+        correspondencia_arquivos = re.search(r'(\d+) arquivos', texto_relevante)
+        
+        # Atualizar as informações do documento
+        quantidade_arquivos = int(correspondencia_arquivos.group(1))
+
+
+        if quantidade_arquivos > 1:
+
+            for i in range(1, quantidade_arquivos + 1):
+                time.sleep(5)
+                self.download_imagem_dentro_loop(
+                    self.xpath_fotos_complementares_multiplos.format(i),
+                    f"Fotos Complementares {i}"
+                )
+        else:
+            time.sleep(5)
+            self.download_imagem_dentro_loop(
+                self.xpath_fotos_complementares_individual,
+                "Fotos Complementares"
+            )
+
+
 

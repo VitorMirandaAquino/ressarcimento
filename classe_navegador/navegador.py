@@ -2,7 +2,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,7 +16,8 @@ class LibertyAutomation:
     def __init__(self, caminho, num_processo):
         self.caminho = caminho
         self.num_processo = num_processo
-        self.navegador = self.configurar_navegador_para_download()
+        #self.navegador = self.configurar_navegador_para_download()
+        self.navegador = self.configurar_navegador_para_download_local()
 
     def configurar_navegador_para_download(self):
         servico = Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
@@ -42,6 +42,27 @@ class LibertyAutomation:
         
         navegador = webdriver.Chrome(service=servico, options=chrome_options)
         return navegador
+    
+    def configurar_navegador_para_download_local(self):
+        servico = Service(ChromeDriverManager().install())
+        chrome_options = webdriver.ChromeOptions()
+        
+        # Define o diretório de download
+        download_directory = os.path.join(self.caminho, str(self.num_processo))
+        if not os.path.exists(download_directory):
+            os.makedirs(download_directory)
+        
+        prefs = {
+            "download.default_directory": download_directory,
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "plugins.always_open_pdf_externally": True,
+            "profile.default_content_settings.images": 1
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        
+        navegador = webdriver.Chrome(service=servico, options=chrome_options)
+        return navegador    
 
     def realizar_login_liberty(self, login, senha):
         self.navegador.get("https://ressarcimentofianca.libertyseguros.com.br/login")
